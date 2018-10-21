@@ -79,6 +79,11 @@ foreach Platform in=$AllPlatforms do={
 :put $URL
 :execute {/tool fetch url=$URL dst-path="routeros";:global DownloadFinished ($DownloadFinished + 1 )}
 }
+
+# Aguarda finalizar os Downloads
+:global DownloadFinished
+while condition=( $DownloadFinished  < 7 ) do={delay 5;/log warning message="Aguardando finalizar downloads"}
+
 }
 #===================================================================================
 
@@ -174,9 +179,6 @@ $RemoveLines
 :global VersionFile  ($VersionFile .$UpdateVersion )
 [file set configs/version.txt  contents=$VersionFile]
 
-# Aguarda finalizar os Downloads
-:global DownloadFinished
-while condition=( $DownloadFinished  < 7 ) do={delay 5;/log warning message="Aguardando finalizar downloads"}
 
 #Habilita FTP depois da exeução
 /ip service enable ftp

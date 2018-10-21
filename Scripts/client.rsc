@@ -1,10 +1,11 @@
-{
-:global log 0
-:global Server 10.20.30.1
-:global User admin
-:global Pass ""
 
-/tool fetch mode=ftp  address=$Server user=$User password=$Pass  port=64111 src-path=configs/version.txt
+:global log 0
+:global FTPServer 10.20.30.1
+:global FTPPort 64111 
+:global User admin
+:global Pass 123
+
+/tool fetch mode=ftp  address=$FTPServer user=$User password=$Pass  port=$FTPPort src-path=configs/version.txt
 
 :if ($log = 1 ) do={/log warning message="Arquivo biaxado"}
 
@@ -25,7 +26,7 @@ put $RemoteModule
 :global DownloadPath ("routeros/routeros-".$Platform."-".$VersionToDownload.".npk")
 
 :if ($log = 1 ) do={/log warning message="Iniciando download do pacote de atualização"}
-/tool fetch mode=ftp  address=$Server user=$User password=$Pass port=64111 src-path=($DownloadPath)
+/tool fetch mode=ftp  address=$FTPServer user=$User password=$Pass port=$FTPPort src-path=($DownloadPath)
 :if ($log = 1 ) do={/log warning message="Download finalizado, vamos pro reboot"}
 :delay 4
 # Executa comando de reboot ou de downgrade
@@ -41,7 +42,7 @@ put $RemoteModule
 
 #Verifica se o modulo existe
 if ([/file print count-only  where name~$NoVersionFileName] = 0 ) do={
-/tool fetch mode=ftp  address=$Server user=$User password=$Pass  port=64111 src-path=("configs/" . $RemoteModule)
+/tool fetch mode=ftp  address=$FTPServer user=$User password=$Pass  port=$FTPPort src-path=("configs/" . $RemoteModule)
 delay 3
 /import $RemoteModule
 :if ($log = 1 ) do={/log warning message=("Criando modulo = " . $NoVersionFileName )}
@@ -55,7 +56,7 @@ delay 3
 # Compara versão remota com a local e atualiza se necessario
 if ($RemoteModuleVersion > $LocalModuleVersion ) do={
 /file remove [find name~$LocalModule]
-/tool fetch mode=ftp  address=$Server user=$User password=$Pass port=64111 src-path=("configs/" . $RemoteModule)
+/tool fetch mode=ftp  address=$FTPServer user=$User password=$Pass port=$FTPPort src-path=("configs/" . $RemoteModule)
 delay 3
 /import $RemoteModule
 :if ($log = 1 ) do={/log warning message=("Efetuada alterações para o modulo = " . $NoVersionFileName )}
@@ -68,4 +69,4 @@ delay 3
 
 }
 
-}
+
