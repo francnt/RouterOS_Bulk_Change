@@ -50,7 +50,7 @@ if ( $GlobalModule="/ip service" or $GlobalModule="/ip dns" ) do={:global FileCo
 :foreach i in=$b do={:if ( [find [tostr $i]  "out-of-mirror"] < 0 ) do={:global FileContentReturn ( $FileContentReturn . $i )}}
 
 #Descomente a linha abaixo caso queira o FTP ativo nos roteadores)
-if ( $GlobalModule="/ip service" ) do={:global FileContentReturn ( $FileContentReturn . "/ip service set ftp disabled=yes port=21" )}
+#if ( $GlobalModule="/ip service" ) do={:global FileContentReturn ( $FileContentReturn . "/ip service set ftp disabled=yes port=21" )}
 
 # Gera arquivo com alteracoes
 /file set ("configs/".$ModuleToExport) contents=$FileContentReturn
@@ -81,8 +81,7 @@ foreach Platform in=$AllPlatforms do={
 }
 
 # Aguarda finalizar os Downloads
-:global DownloadFinished
-while condition=( $DownloadFinished  < 7 ) do={delay 5;/log warning message="Aguardando finalizar downloads"}
+#while condition=( $DownloadFinished  < 7 ) do={delay 5;/log warning message="Aguardando finalizar downloads"}
 
 }
 #===================================================================================

@@ -1,0 +1,213 @@
+/ip smb shares add name=routeros
+/ip smb shares add name=configs
+:delay 2
+/ip smb shares remove [find name=routeros]
+/ip smb shares remove [find name=configs]
+/system resource print file=/configs/version.txt
+
+#:global UpdateVersion [/ip tftp get [find req-filename~"UpdateVersion"] req-filename] 
+#"
+#:global VersionToDownload [:pick $UpdateVersion 14 20]
+#[file set configs/version.txt  contents=$VersionToDownload]
+
+
+
+/system script
+add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="# Tudo que estiver dentro do modulo ser\E1 exportado e impotado nos clientes\r\
+    \n# Se deseja que uma determinada configura\E7\E3o seja reescrita dever\E1 conter \"!==! -\"\r\
+    \n# Se deseja que uma determinada configura\E7\E3o n\E3o seja exportada o comentario dever\E1 conter  \"out-of-mirror\"\r\
+    \n\r\
+    \n#Desabilita FTP antes de come\E7ar a exeu\E7\E3o\r\
+    \n/ip service disable ftp\r\
+    \n\r\
+    \n\r\
+    \n#==========================================================================================\r\
+    \n#======================= Remove linhas que nao devem ser espelhadas =======================\r\
+    \n#==========================================================================================\r\
+    \n\r\
+    \n:global RemoveLines do={\r\
+    \n:global b \"\"\r\
+    \n:global GlobalModule\r\
+    \n:global ModuleToExport\r\
+    \n:global FileContentReturn\r\
+    \n\r\
+    \n# Executa Export\r\
+    \n[parse (\$GlobalModule. \" export verbose terse file=configs/\" . \$ModuleToExport)]\r\
+    \n:delay 2\r\
+    \n\r\
+    \n\r\
+    \n# Remove linhas desnecessarias do inicio de um arquivo de export\r\
+    \nglobal a [file get (\"configs/\".\$ModuleToExport) contents ]\r\
+    \nglobal a [:pick \$a ([find \$a \"#\\r\\n#\\r\\n#\"]+7) 10000000]\r\
+    \n\r\
+    \n\r\
+    \n# Altera alguns caracters =============================================================\r\
+    \n:for i from=0 to=([:len \$a] - 1) do={\r\
+    \n  :global char [:pick \$a \$i]\r\
+    \n  :global char1 [:pick \$a (\$i + 1)]\r\
+    \n\r\
+    \n  :if (\$char = \",\" ) do={:global char \"\\\\,\"} \r\
+    \n  # Coloca uma virgula para converter em array e retirar linhas com comentario out-of-mirror\r\
+    \n  :if (\$char = \"/\" and [:tonum \$char1] < 0  ) do={:global char \",/\"} \r\
+    \n  \r\
+    \n  # Corrige caracter aspas para nao dar problema apos converter em array\r\
+    \n  :if (\$char = \"\\\"\" ) do={:global char \"\\\\\\\"\"} \r\
+    \n  :global b (\$b . \$char)\r\
+    \n  }\r\
+    \n\r\
+    \n# Coloca acao no inicio do arquivo para remover regras antigas\r\
+    \n\r\
+    \nif ( \$GlobalModule=\"/ip service\" or \$GlobalModule=\"/ip dns\" ) do={:global FileContentReturn \"\"} else={\r\
+    \n:global FileContentReturn (\$GlobalModule . \" remove [find comment~\\\"!==! -\\\"] \") }\r\
+    \n\r\
+    \n# Tira linhas que nao devem ser espelhadas\r\
+    \n:global b [:toarray \$b]\r\
+    \n:foreach i in=\$b do={:if ( [find [tostr \$i]  \"out-of-mirror\"] < 0 ) do={:global FileContentReturn ( \$FileContentReturn . \$i )}}\r\
+    \n\r\
+    \n#Descomente a linha abaixo caso queira o FTP ativo nos roteadores)\r\
+    \n#if ( \$GlobalModule=\"/ip service\" ) do={:global FileContentReturn ( \$FileContentReturn . \"/ip service set ftp disabled=yes port=21\" )}\r\
+    \n\r\
+    \n# Gera arquivo com alteracoes\r\
+    \n/file set (\"configs/\".\$ModuleToExport) contents=\$FileContentReturn\r\
+    \n\r\
+    \n}\r\
+    \n\r\
+    \n#==========================================================================================\r\
+    \n#======================= Inicio do Script =================================================\r\
+    \n#==========================================================================================\r\
+    \n\r\
+    \n\r\
+    \n# Verifica arquivos para Update ==========================================================================\r\
+    \n\r\
+    \n:global UpdateVersion [/ip tftp get [find req-filename~\"UpdateVersion\"] req-filename] \r\
+    \n#\"\r\
+    \n:global OldVersion [file get configs/version.txt  contents]\r\
+    \n:global OldVersion [:pick \$OldVersion ([find \$OldVersion \"=\"] + 1) 1000]\r\
+    \n:global VersionToDownload [:pick \$UpdateVersion 14 20]\r\
+    \n\r\
+    \n:if (\$VersionToDownload != \$OldVersion) do={\r\
+    \n/file remove [find name~\"routeros/routeros-\"]\r\
+    \n:global DownloadFinished 0\r\
+    \n:global AllPlatforms [toarray \"x86,mipsbe,powerpc,tile,smips,arm,mmips\"]\r\
+    \nforeach Platform in=\$AllPlatforms do={\r\
+    \n:global URL (\"https://download.mikrotik.com/routeros/\".\$VersionToDownload .\"/routeros-\".\$Platform.\"-\".\$VersionToDownload .\".npk\")\r\
+    \n:put \$URL\r\
+    \n:execute {/tool fetch url=\$URL dst-path=\"routeros\";:global DownloadFinished (\$DownloadFinished + 1 )}\r\
+    \n}\r\
+    \n\r\
+    \n# Aguarda finalizar os Downloads\r\
+    \n:global DownloadFinished\r\
+    \nwhile condition=( \$DownloadFinished  < 7 ) do={delay 5;/log warning message=\"Aguardando finalizar downloads\"}\r\
+    \n\r\
+    \n}\r\
+    \n#===================================================================================\r\
+    \n\r\
+    \n\r\
+    \n\r\
+    \n\r\
+    \n\r\
+    \n#Pega lista de modulos\r\
+    \n:global ModuleList \"\"\r\
+    \n:foreach i in=[/ip tftp  find disabled=no req-filename~\"/\" ] do={:global ModuleList ( \$ModuleList . [/ip tftp  get \$i req-filename  ].\",\")}\r\
+    \n\r\
+    \nglobal ModuleList [:toarray \$ModuleList ]\r\
+    \nglobal VersionFile \"\"\r\
+    \n\r\
+    \n# Executa acoes para cada modulo dentro da lista de modulos\r\
+    \nforeach Module in=\$ModuleList do={\r\
+    \n:global GlobalModule \$Module\r\
+    \n:global ModuleToExport \"\"\r\
+    \n\r\
+    \n#Retira espa\E7os e coloca _ no nome do arquivo de export\r\
+    \n:for i from=0 to=([:len \$Module] - 1) do={\r\
+    \n:local char [:pick \$Module \$i]\r\
+    \n:if (\$char = \" \") do={:set \$char \"_\"}\r\
+    \n:global ModuleToExport (\$ModuleToExport . \$char)\r\
+    \n}\r\
+    \n\r\
+    \n# Retira o / do inicio do nome do modulo para fazer o nome do arquivo\r\
+    \nglobal ModuleToExport [pick \$ModuleToExport 1 100]\r\
+    \n\r\
+    \n#==========================================================================================================================\r\
+    \n#======================== Comeca  as verificaoes =================================================================================\r\
+    \n#==========================================================================================================================\r\
+    \n\r\
+    \n\r\
+    \n#Verifica se o arquivo de export nao existe ===========================================================================\r\
+    \nif ([file print count-only  where name~(\$ModuleToExport . \"_version_\")] = 0 ) do={\r\
+    \n\r\
+    \n#Gera nome do arquivo inicial\r\
+    \nglobal ModuleToExport (\$ModuleToExport . \"_version_1.rsc\")\r\
+    \nput \$ModuleToExport\r\
+    \n\r\
+    \n\$RemoveLines\r\
+    \n} else={\r\
+    \n\r\
+    \n# Se o arqvuivo de export j\E1 existe faz verifica\E7\F5es e altera\E7\F5es nos arquivos ===========================================================================\r\
+    \n\r\
+    \n#Pega tamanho do antigo arquivo de export\r\
+    \n:global OldSize [file get [find name~(\$ModuleToExport . \"_version_\")] size ]\r\
+    \n\r\
+    \n#Gera nome do arquivo temporario\r\
+    \nglobal ModuleToExport (\$ModuleToExport . \"_tmp.rsc\")\r\
+    \nput \$ModuleToExport\r\
+    \n\r\
+    \n\$RemoveLines\r\
+    \n\r\
+    \n# Aguarda arquivo temporario ser gerado para pegar o tamanhos dele\r\
+    \n:delay 2\r\
+    \n:global NewSize [file get [find name=(\"configs/\". \$ModuleToExport)] size ]\r\
+    \n\r\
+    \n#Verifica se o tamanho do arquivo antigo e igual o arquivo temporario\r\
+    \n:if ( \$NewSize != \$OldSize ) do={\r\
+    \nput \"Aquivo alterado\"\r\
+    \n\r\
+    \n# Tira o final _tmp.rsc da variavel \$ModuleToExport\r\
+    \n:global ModuleToExport [pick  \$ModuleToExport 0 ([len \$ModuleToExport ] - 8)]\r\
+    \n\r\
+    \n#Pega versao do arquivo antigo\r\
+    \n:global Version [/file get [find name~(\$ModuleToExport . \"_version\")] name]\r\
+    \n:global Version [pick \$Version ([:len \$ModuleToExport] +17) [find \$Version \".\" ]]\r\
+    \n\r\
+    \n#Remove o arquivo antigo\r\
+    \n/file remove [find name~(\$ModuleToExport . \"_version\")]\r\
+    \n\r\
+    \n#Gera nome do arquivo com a nova versao\r\
+    \nglobal ModuleToExport (\$ModuleToExport . \"_version_\".(\$Version + 1) .\".rsc\")\r\
+    \n\r\
+    \n\$RemoveLines\r\
+    \n\r\
+    \n} else={put \"Nada foi alterado\"}\r\
+    \n/file remove [find name~\"_tmp.rsc\"]\r\
+    \n\r\
+    \n}\r\
+    \n}\r\
+    \n\r\
+    \n#==========================================================================================================================\r\
+    \n#========================= Acoes finais ================================================================================\r\
+    \n#==========================================================================================================================\r\
+    \n\r\
+    \n\r\
+    \n\r\
+    \n# Gera arquivo de versao version.txt\r\
+    \n:foreach i in=[file find name~\"_version_\"]  do={:global VersionFile (\$VersionFile . [pick [file get \$i name] ([find [file get \$i name] \"/\"] + 1 ) 100] . \",\")}\r\
+    \n:global VersionFile  (\$VersionFile .\$UpdateVersion )\r\
+    \n[file set configs/version.txt  contents=\$VersionFile]\r\
+    \n\r\
+    \n\r\
+    \n#Habilita FTP depois da exeu\E7\E3o\r\
+    \n/ip service enable ftp\r\
+    \n\r\
+    \n/log error message=\"Script finalizado\""
+
+	
+	
+	
+	
+/ip tftp
+add req-filename="/ip service"
+add disabled=yes req-filename="/ip dns"
+add disabled=yes req-filename="/ip firewall filter"
+add req-filename="UpdateVersion=6.41"
+
+
