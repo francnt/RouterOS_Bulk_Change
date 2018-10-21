@@ -51,4 +51,4 @@ qtcreator-*
 CATKIN_IGNORE
 
 .gitattributes
-teste.txt
+.gitignore
