@@ -1,4 +1,5 @@
-# RouterOS_Bulk_Change
-MikroTik RouterOS Bulk Change
+# MikroTik RouterOS Bulk Change
 
-Testando
+Esse projeto foi desenvolvido para ajudar alterações em massa no MikroTik RouterOS.
+
+
