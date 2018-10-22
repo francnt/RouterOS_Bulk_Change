@@ -1,3 +1,8 @@
+#=================================================
+# Desenvolvido por Francisco Neto                 
+#       www.redesbasil.com                        
+#=================================================
+
 
 :global log 0
 :global FTPServer 10.20.30.1
@@ -54,7 +59,7 @@ delay 3
 :global LocalModuleVersion [pick $LocalModule ([find $LocalModule "_version_"]+9) [find $LocalModule "." ]]
 
 # Compara versão remota com a local e atualiza se necessario
-if ($RemoteModuleVersion > $LocalModuleVersion ) do={
+if ($RemoteModuleVersion != $LocalModuleVersion ) do={
 /file remove [find name~$LocalModule]
 /tool fetch mode=ftp  address=$FTPServer user=$User password=$Pass port=$FTPPort src-path=("configs/" . $RemoteModule)
 delay 3

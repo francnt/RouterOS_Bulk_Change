@@ -5,27 +5,36 @@
 /ip smb shares remove [find name=configs]
 /system resource print file=/configs/version.txt
 
-#:global UpdateVersion [/ip tftp get [find req-filename~"UpdateVersion"] req-filename] 
-#"
-#:global VersionToDownload [:pick $UpdateVersion 14 20]
-#[file set configs/version.txt  contents=$VersionToDownload]
+/ip service set ftp port=64111
+
+/ip tftp
+add req-filename="/ip service"
+add disabled=yes req-filename="/ip dns"
+add disabled=yes req-filename="/ip firewall filter"
+add req-filename="UpdateVersion=6.43.4"
 
 
 
 /system script
-add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="# Tudo que estiver dentro do modulo ser\E1 exportado e impotado nos clientes\r\
+add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="#=================================================\r\
+    \n# Desenvolvido por Francisco Neto                 \r\
+    \n#       www.redesbasil.com                        \r\
+    \n#=================================================\r\
+    \n\r\
+    \n#=========== Instru\E7\F5es ===========================================================================================\r\
+    \n# Tudo que estiver dentro do modulo ser\E1 exportado e impotado nos clientes\r\
     \n# Se deseja que uma determinada configura\E7\E3o seja reescrita dever\E1 conter \"!==! -\"\r\
     \n# Se deseja que uma determinada configura\E7\E3o n\E3o seja exportada o comentario dever\E1 conter  \"out-of-mirror\"\r\
+    \n#==================================================================================================================\r\
     \n\r\
-    \n#Desabilita FTP antes de come\E7ar a exeu\E7\E3o\r\
-    \n/ip service disable ftp\r\
+    \n\r\
     \n\r\
     \n\r\
     \n#==========================================================================================\r\
-    \n#======================= Remove linhas que nao devem ser espelhadas =======================\r\
+    \n#======================= Cria arquivo de com as configura\E7\F5es =============================\r\
     \n#==========================================================================================\r\
     \n\r\
-    \n:global RemoveLines do={\r\
+    \n:global CreateConfigFile do={\r\
     \n:global b \"\"\r\
     \n:global GlobalModule\r\
     \n:global ModuleToExport\r\
@@ -77,6 +86,10 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n#==========================================================================================\r\
     \n\r\
     \n\r\
+    \n#Desabilita FTP antes de come\E7ar a execu\E7\E3o\r\
+    \n/ip service disable ftp\r\
+    \n\r\
+    \n\r\
     \n# Verifica arquivos para Update ==========================================================================\r\
     \n\r\
     \n:global UpdateVersion [/ip tftp get [find req-filename~\"UpdateVersion\"] req-filename] \r\
@@ -96,7 +109,6 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n}\r\
     \n\r\
     \n# Aguarda finalizar os Downloads\r\
-    \n:global DownloadFinished\r\
     \nwhile condition=( \$DownloadFinished  < 7 ) do={delay 5;/log warning message=\"Aguardando finalizar downloads\"}\r\
     \n\r\
     \n}\r\
@@ -140,7 +152,7 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \nglobal ModuleToExport (\$ModuleToExport . \"_version_1.rsc\")\r\
     \nput \$ModuleToExport\r\
     \n\r\
-    \n\$RemoveLines\r\
+    \n\$CreateConfigFile\r\
     \n} else={\r\
     \n\r\
     \n# Se o arqvuivo de export j\E1 existe faz verifica\E7\F5es e altera\E7\F5es nos arquivos ===========================================================================\r\
@@ -152,7 +164,7 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \nglobal ModuleToExport (\$ModuleToExport . \"_tmp.rsc\")\r\
     \nput \$ModuleToExport\r\
     \n\r\
-    \n\$RemoveLines\r\
+    \n\$CreateConfigFile\r\
     \n\r\
     \n# Aguarda arquivo temporario ser gerado para pegar o tamanhos dele\r\
     \n:delay 2\r\
@@ -175,7 +187,7 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n#Gera nome do arquivo com a nova versao\r\
     \nglobal ModuleToExport (\$ModuleToExport . \"_version_\".(\$Version + 1) .\".rsc\")\r\
     \n\r\
-    \n\$RemoveLines\r\
+    \n\$CreateConfigFile\r\
     \n\r\
     \n} else={put \"Nada foi alterado\"}\r\
     \n/file remove [find name~\"_tmp.rsc\"]\r\
@@ -199,15 +211,3 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n/ip service enable ftp\r\
     \n\r\
     \n/log error message=\"Script finalizado\""
-
-	
-	
-	
-	
-/ip tftp
-add req-filename="/ip service"
-add disabled=yes req-filename="/ip dns"
-add disabled=yes req-filename="/ip firewall filter"
-add req-filename="UpdateVersion=6.41"
-
-

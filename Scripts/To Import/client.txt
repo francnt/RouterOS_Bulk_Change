@@ -1,10 +1,15 @@
 /system scheduler
-add interval=30s start-time=startup name=schedule_check_changes2 on-event="\r\
+add interval=30s name=schedule_check_changes2 on-event="#=================================================\r\
+    \n# Desenvolvido por Francisco Neto                 \r\
+    \n#       www.redesbasil.com                        \r\
+    \n#=================================================\r\
+    \n\r\
+    \n\r\
     \n:global log 0\r\
     \n:global FTPServer 10.20.30.1\r\
     \n:global FTPPort 64111 \r\
     \n:global User admin\r\
-    \n:global Pass 123\r\
+    \n:global Pass \"\"\r\
     \n\r\
     \n/tool fetch mode=ftp  address=\$FTPServer user=\$User password=\$Pass  port=\$FTPPort src-path=configs/version.txt\r\
     \n\r\
@@ -55,7 +60,7 @@ add interval=30s start-time=startup name=schedule_check_changes2 on-event="\r\
     \n:global LocalModuleVersion [pick \$LocalModule ([find \$LocalModule \"_version_\"]+9) [find \$LocalModule \".\" ]]\r\
     \n\r\
     \n# Compara vers\E3o remota com a local e atualiza se necessario\r\
-    \nif (\$RemoteModuleVersion > \$LocalModuleVersion ) do={\r\
+    \nif (\$RemoteModuleVersion != \$LocalModuleVersion ) do={\r\
     \n/file remove [find name~\$LocalModule]\r\
     \n/tool fetch mode=ftp  address=\$FTPServer user=\$User password=\$Pass port=\$FTPPort src-path=(\"configs/\" . \$RemoteModule)\r\
     \ndelay 3\r\
@@ -71,7 +76,8 @@ add interval=30s start-time=startup name=schedule_check_changes2 on-event="\r\
     \n}\r\
     \n\r\
     \n\r\
-    \n" 
+    \n" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-time=startup
+
 
 #Fim
 

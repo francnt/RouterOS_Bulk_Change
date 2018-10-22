@@ -1,16 +1,22 @@
+#=================================================
+# Desenvolvido por Francisco Neto                 
+#       www.redesbasil.com                        
+#=================================================
+
+#=========== Instruções ===========================================================================================
 # Tudo que estiver dentro do modulo será exportado e impotado nos clientes
 # Se deseja que uma determinada configuração seja reescrita deverá conter "!==! -"
 # Se deseja que uma determinada configuração não seja exportada o comentario deverá conter  "out-of-mirror"
+#==================================================================================================================
 
-#Desabilita FTP antes de começar a exeução
-/ip service disable ftp
+
 
 
 #==========================================================================================
-#======================= Remove linhas que nao devem ser espelhadas =======================
+#======================= Cria arquivo de com as configurações =============================
 #==========================================================================================
 
-:global RemoveLines do={
+:global CreateConfigFile do={
 :global b ""
 :global GlobalModule
 :global ModuleToExport
@@ -62,6 +68,10 @@ if ( $GlobalModule="/ip service" or $GlobalModule="/ip dns" ) do={:global FileCo
 #==========================================================================================
 
 
+#Desabilita FTP antes de começar a execução
+/ip service disable ftp
+
+
 # Verifica arquivos para Update ==========================================================================
 
 :global UpdateVersion [/ip tftp get [find req-filename~"UpdateVersion"] req-filename] 
@@ -81,7 +91,7 @@ foreach Platform in=$AllPlatforms do={
 }
 
 # Aguarda finalizar os Downloads
-#while condition=( $DownloadFinished  < 7 ) do={delay 5;/log warning message="Aguardando finalizar downloads"}
+while condition=( $DownloadFinished  < 7 ) do={delay 5;/log warning message="Aguardando finalizar downloads"}
 
 }
 #===================================================================================
@@ -124,7 +134,7 @@ if ([file print count-only  where name~($ModuleToExport . "_version_")] = 0 ) do
 global ModuleToExport ($ModuleToExport . "_version_1.rsc")
 put $ModuleToExport
 
-$RemoveLines
+$CreateConfigFile
 } else={
 
 # Se o arqvuivo de export já existe faz verificações e alterações nos arquivos ===========================================================================
@@ -136,7 +146,7 @@ $RemoveLines
 global ModuleToExport ($ModuleToExport . "_tmp.rsc")
 put $ModuleToExport
 
-$RemoveLines
+$CreateConfigFile
 
 # Aguarda arquivo temporario ser gerado para pegar o tamanhos dele
 :delay 2
@@ -159,7 +169,7 @@ put "Aquivo alterado"
 #Gera nome do arquivo com a nova versao
 global ModuleToExport ($ModuleToExport . "_version_".($Version + 1) .".rsc")
 
-$RemoveLines
+$CreateConfigFile
 
 } else={put "Nada foi alterado"}
 /file remove [find name~"_tmp.rsc"]
