@@ -8,7 +8,7 @@
 :global FTPServer 10.20.30.1
 :global FTPPort 64111 
 :global User admin
-:global Pass 123
+:global Pass ""
 
 /tool fetch mode=ftp  address=$FTPServer user=$User password=$Pass  port=$FTPPort src-path=configs/version.txt
 
