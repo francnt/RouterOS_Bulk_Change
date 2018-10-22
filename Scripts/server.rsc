@@ -21,9 +21,17 @@
 :global GlobalModule
 :global ModuleToExport
 :global FileContentReturn
+:global ModuloToExportVerbose "/ip dns,/ip service"
+
 
 # Executa Export
+
+if ( $ModuloToExportVerbose ~ $GlobalModule ) do={
 [parse ($GlobalModule. " export verbose terse file=configs/" . $ModuleToExport)]
+} else={
+[parse ($GlobalModule. " export terse file=configs/" . $ModuleToExport)]
+}
+
 :delay 2
 
 

@@ -14,7 +14,6 @@ add disabled=yes req-filename="/ip firewall filter"
 add req-filename="UpdateVersion=6.43.4"
 
 
-
 /system script
 add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="#=================================================\r\
     \n# Desenvolvido por Francisco Neto                 \r\
@@ -39,9 +38,17 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n:global GlobalModule\r\
     \n:global ModuleToExport\r\
     \n:global FileContentReturn\r\
+    \n:global ModuloToExportVerbose \"/ip dns,/ip service\"\r\
+    \n\r\
     \n\r\
     \n# Executa Export\r\
+    \n\r\
+    \nif ( \$ModuloToExportVerbose ~ \$GlobalModule ) do={\r\
     \n[parse (\$GlobalModule. \" export verbose terse file=configs/\" . \$ModuleToExport)]\r\
+    \n} else={\r\
+    \n[parse (\$GlobalModule. \" export terse file=configs/\" . \$ModuleToExport)]\r\
+    \n}\r\
+    \n\r\
     \n:delay 2\r\
     \n\r\
     \n\r\
@@ -211,3 +218,5 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n/ip service enable ftp\r\
     \n\r\
     \n/log error message=\"Script finalizado\""
+	
+#Fim
