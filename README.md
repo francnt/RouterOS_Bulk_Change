@@ -17,3 +17,9 @@ Oque já temos até agora.
 – Não exporta a configuração que contiver “out-of-mirror” dentro do comentário.
 
 – Faz atualização do RouterOS em todos os clientes de espelhamento.
+
+
+---------------------------------------
+
+Para mais informações de como o script trabalha e como fazer o setup visite o link abaixo.
+https://www.redesbrasil.com/alteracoes-em-massa-em-roteadores-da-mikrotik/
