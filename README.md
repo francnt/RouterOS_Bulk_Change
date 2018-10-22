@@ -17,4 +17,3 @@ Oque já temos até agora.
 – Não exporta a configuração que contiver “out-of-mirror” dentro do comentário.
 
 – Faz atualização do RouterOS em todos os clientes de espelhamento.
----------------------------------------
