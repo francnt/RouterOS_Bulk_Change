@@ -52,9 +52,8 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n:delay 2\r\
     \n\r\
     \n\r\
-    \n# Remove linhas desnecessarias do inicio de um arquivo de export\r\
+    \n\r\
     \nglobal a [file get (\"configs/\".\$ModuleToExport) contents ]\r\
-    \nglobal a [:pick \$a ([find \$a \"#\\r\\n#\\r\\n#\"]+7) 10000000]\r\
     \n\r\
     \n\r\
     \n# Altera alguns caracters =============================================================\r\
@@ -71,13 +70,17 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n  :global b (\$b . \$char)\r\
     \n  }\r\
     \n\r\
+    \n:global b [:toarray \$b]\r\
+    \n\r\
+    \n# Remove linhas desnecessarias do inicio de um arquivo de export\r\
+    \n:global b [pick \$b 1 [len \$b ]]\r\
+    \n\r\
     \n# Coloca acao no inicio do arquivo para remover regras antigas\r\
     \n\r\
     \nif ( \$GlobalModule=\"/ip service\" or \$GlobalModule=\"/ip dns\" ) do={:global FileContentReturn \"\"} else={\r\
-    \n:global FileContentReturn (\$GlobalModule . \" remove [find comment~\\\"!==! -\\\"] \") }\r\
+    \n:global FileContentReturn (\$GlobalModule . \" remove [find comment~\\\"!==! -\\\"] \\r\\n\") }\r\
     \n\r\
     \n# Tira linhas que nao devem ser espelhadas\r\
-    \n:global b [:toarray \$b]\r\
     \n:foreach i in=\$b do={:if ( [find [tostr \$i]  \"out-of-mirror\"] < 0 ) do={:global FileContentReturn ( \$FileContentReturn . \$i )}}\r\
     \n\r\
     \n#Descomente a linha abaixo caso queira o FTP ativo nos roteadores)\r\
@@ -99,6 +102,7 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n\r\
     \n# Verifica arquivos para Update ==========================================================================\r\
     \n\r\
+    \nif ([/ip tftp print count-only where req-filename~\"UpdateVersion\" disabled=no] > 0 ) do={\r\
     \n:global UpdateVersion [/ip tftp get [find req-filename~\"UpdateVersion\"] req-filename] \r\
     \n#\"\r\
     \n:global OldVersion [file get configs/version.txt  contents]\r\
@@ -117,6 +121,8 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n\r\
     \n# Aguarda finalizar os Downloads\r\
     \nwhile condition=( \$DownloadFinished  < 7 ) do={delay 5;/log warning message=\"Aguardando finalizar downloads\"}\r\
+    \n\r\
+    \n}\r\
     \n\r\
     \n}\r\
     \n#===================================================================================\r\
