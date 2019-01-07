@@ -35,9 +35,8 @@ if ( $ModuloToExportVerbose ~ $GlobalModule ) do={
 :delay 2
 
 
-# Remove linhas desnecessarias do inicio de um arquivo de export
+
 global a [file get ("configs/".$ModuleToExport) contents ]
-global a [:pick $a ([find $a "#\r\n#\r\n#"]+7) 10000000]
 
 
 # Altera alguns caracters =============================================================
@@ -54,13 +53,17 @@ global a [:pick $a ([find $a "#\r\n#\r\n#"]+7) 10000000]
   :global b ($b . $char)
   }
 
+:global b [:toarray $b]
+
+# Remove linhas desnecessarias do inicio de um arquivo de export
+:global b [pick $b 1 [len $b ]]
+
 # Coloca acao no inicio do arquivo para remover regras antigas
 
 if ( $GlobalModule="/ip service" or $GlobalModule="/ip dns" ) do={:global FileContentReturn ""} else={
-:global FileContentReturn ($GlobalModule . " remove [find comment~\"!==! -\"] ") }
+:global FileContentReturn ($GlobalModule . " remove [find comment~\"!==! -\"] \r\n") }
 
 # Tira linhas que nao devem ser espelhadas
-:global b [:toarray $b]
 :foreach i in=$b do={:if ( [find [tostr $i]  "out-of-mirror"] < 0 ) do={:global FileContentReturn ( $FileContentReturn . $i )}}
 
 #Descomente a linha abaixo caso queira o FTP ativo nos roteadores)
@@ -82,6 +85,7 @@ if ( $GlobalModule="/ip service" or $GlobalModule="/ip dns" ) do={:global FileCo
 
 # Verifica arquivos para Update ==========================================================================
 
+if ([/ip tftp print count-only where req-filename~"UpdateVersion" disabled=no] > 0 ) do={
 :global UpdateVersion [/ip tftp get [find req-filename~"UpdateVersion"] req-filename] 
 #"
 :global OldVersion [file get configs/version.txt  contents]
@@ -100,6 +104,8 @@ foreach Platform in=$AllPlatforms do={
 
 # Aguarda finalizar os Downloads
 while condition=( $DownloadFinished  < 7 ) do={delay 5;/log warning message="Aguardando finalizar downloads"}
+
+}
 
 }
 #===================================================================================
