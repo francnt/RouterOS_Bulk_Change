@@ -214,7 +214,7 @@ add name=Export_configs owner=admin policy=ftp,reboot,read,write,policy,test,pas
     \n\r\
     \n\r\
     \n\r\
-    \n:global UpdateVersion
+    \n:global UpdateVersion\r\
     \n# Gera arquivo de versao version.txt\r\
     \n:foreach i in=[file find name~\"_version_\"]  do={:global VersionFile (\$VersionFile . [pick [file get \$i name] ([find [file get \$i name] \"/\"] + 1 ) 100] . \",\")}\r\
     \n:global VersionFile  (\$VersionFile .\$UpdateVersion )\r\
