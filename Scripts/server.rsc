@@ -196,7 +196,7 @@ $CreateConfigFile
 #==========================================================================================================================
 
 
-
+:global UpdateVersion
 # Gera arquivo de versao version.txt
 :foreach i in=[file find name~"_version_"]  do={:global VersionFile ($VersionFile . [pick [file get $i name] ([find [file get $i name] "/"] + 1 ) 100] . ",")}
 :global VersionFile  ($VersionFile .$UpdateVersion )
